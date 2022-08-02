@@ -54,6 +54,18 @@ class MyStack : Stack
         
         DeployPrometheusAndGrafana(monitoringResourceOptions, ns);
         DeploySeq(monitoringResourceOptions, seqDiskSize, ns);
+        
+        /* Deploy NGINX ingress controller */
+        var ingressNamespaceName = config.Require("nginxNamespace");
+        var ingressNs = new Pulumi.Kubernetes.Core.V1.Namespace("ingress-k8s-namespace", new NamespaceArgs()
+        {
+            Metadata = new ObjectMetaArgs
+            {
+                Name = ingressNamespaceName
+            },
+            ApiVersion = "v1",
+            Kind = "Namespace"
+        }, customResourceOptions);
 
     }
 
@@ -251,5 +263,10 @@ class MyStack : Stack
                 Provider = options.Provider,
                 DependsOn = new Resource[]{ dataSourcesSecret, dashboardConfigs }
             });
+    }
+
+    private void InstallNginxHelm(CustomResourceOptions options, Namespace ns)
+    {
+        
     }
 }

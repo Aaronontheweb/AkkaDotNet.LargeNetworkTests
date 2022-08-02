@@ -1,4 +1,5 @@
 config:
   largescale-apm:apmNamespace: monitoring
+  largescale-apm:nginxNamespace: ingress
   largescale-apm:requiredStack: dev
   largescale-apm:seqDiskSize: "500"

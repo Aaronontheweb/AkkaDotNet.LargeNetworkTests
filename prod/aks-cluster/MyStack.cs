@@ -6,6 +6,8 @@ using Pulumi.AzureAD;
 using Pulumi.AzureNative.ContainerService;
 using Pulumi.AzureNative.ContainerService.Inputs;
 using Pulumi.AzureNative.Authorization;
+using Pulumi.AzureNative.Compute;
+using Pulumi.AzureNative.Network;
 using Pulumi.AzureNative.Network.Inputs;
 using Pulumi.AzureNative.Security;
 using Pulumi.Kubernetes.Types.Inputs.Core.V1;
@@ -13,6 +15,7 @@ using Pulumi.Kubernetes.Types.Inputs.Meta.V1;
 using Pulumi.Random;
 using Pulumi.Tls;
 using GetClientConfig = Pulumi.AzureNative.Authorization.GetClientConfig;
+using PublicIPAddressArgs = Pulumi.AzureNative.Network.PublicIPAddressArgs;
 using ResourceIdentityType = Pulumi.AzureNative.ContainerService.ResourceIdentityType;
 
 class MyStack : Stack
@@ -93,6 +96,18 @@ class MyStack : Stack
             VirtualNetworkName = vnet.Name,
             AddressPrefix = "10.0.0.0/16",
         });
+        
+        // Create a public IP address for the Ingress controller
+        var nginxIp = new Pulumi.AzureNative.Network.PublicIPAddress("nginx-ip", new PublicIPAddressArgs()
+        {
+            ResourceGroupName = rgName,
+            PublicIpAddressName = "nginx-ip",
+            PublicIPAllocationMethod = "Static",
+            Sku = new PublicIPAddressSkuArgs(){ Name = "Standard" }
+        });
+
+        IngressIp = nginxIp.IpAddress;
+
 
         var cluster = new ManagedCluster("akkastress", new ManagedClusterArgs()
         {
@@ -259,6 +274,8 @@ class MyStack : Stack
     }
 
     [Output("kubeconfig")] public Output<string> KubeConfig { get; set; }
+    
+    [Output("ingress-ip")] public Output<string> IngressIp { get; set; }
 
     private static Output<string> GetKubeConfig(Output<string> resourceGroupName, Output<string> clusterName)
         => ListManagedClusterUserCredentials.Invoke(new ListManagedClusterUserCredentialsInvokeArgs
